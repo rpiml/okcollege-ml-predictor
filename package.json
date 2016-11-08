@@ -1,0 +1,16 @@
+{
+  "name": "ml-predictor",
+  "version": "1.0.0",
+  "description": "prediction engine",
+  "main": "server.js",
+  "dependencies": {
+    "amqplib": "^0.5.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "MIT"
+}
