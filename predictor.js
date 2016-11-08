@@ -10,11 +10,11 @@ client.on('connect', function() {
 
 amqp.connect('amqp://rabbitmq:rabbitmq@127.0.0.1', function(err, conn) {
   conn.createChannel(function(err, ch) {
-    var q = 'rpc_queue';
+    var q = 'predictor_queue';
 
     ch.assertQueue(q, {durable: false});
     ch.prefetch(1);
-    console.log(' [x] Awaiting RPC requests');
+    console.log(' [x] Awaiting RPC prediction requests');
     ch.consume(q, function reply(msg) {
       var n = parseInt(msg.content.toString());
 
@@ -34,9 +34,11 @@ amqp.connect('amqp://rabbitmq:rabbitmq@127.0.0.1', function(err, conn) {
 });
 
 function bilinearModel(n) {
-  console.log()
   client.get('college.csv', function(err, colleges) {
-    console.log(colleges);
-});
+    client.get('student.csv', function(err, student) {
+      console.log(student);
+      console.log(colleges);
+    });
+  });
   return "Rensselaer";
 }
