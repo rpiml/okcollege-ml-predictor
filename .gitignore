@@ -1,0 +1,10 @@
+# Dependency directories
+node_modules
+
+# Directory for babel output
+lib
+
+# Optional npm cache directory
+.npm
+
+npm-debug.log
