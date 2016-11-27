@@ -4,12 +4,13 @@
   "description": "prediction engine",
   "main": "server.js",
   "dependencies": {
-    "amqplib": "^0.5.0"
+    "amqplib": "^0.5.0",
+    "redis": "^2.6.3"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node predictor.js"
   },
   "author": "",
   "license": "MIT"

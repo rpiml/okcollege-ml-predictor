@@ -16,11 +16,12 @@ amqp.connect('amqp://rabbitmq:rabbitmq@127.0.0.1', function(err, conn) {
     ch.prefetch(1);
     console.log(' [x] Awaiting RPC prediction requests');
     ch.consume(q, function reply(msg) {
-      var n = parseInt(msg.content.toString());
+      let content = msg.content.toString();
 
       console.log(" [.] Received Request");
+      console.log("Payload:", msg);
 
-      var response = bilinearModel(n);
+      let response = bilinearModel(content);
 
       console.log("Recommending", response);
 
@@ -34,11 +35,12 @@ amqp.connect('amqp://rabbitmq:rabbitmq@127.0.0.1', function(err, conn) {
 });
 
 function bilinearModel(n) {
-  client.get('college.csv', function(err, colleges) {
-    client.get('student.csv', function(err, student) {
-      console.log(student);
-      console.log(colleges);
-    });
-  });
-  return "Rensselaer";
+  // TODO implement something resembling a bilinear model
+  // client.get('college.csv', function(err, colleges) {
+  //   client.get('student.csv', function(err, student) {
+  //     // console.log(student);
+  //     // console.log(colleges);
+  //   });
+  // });
+  return "1501,299,279";
 }
