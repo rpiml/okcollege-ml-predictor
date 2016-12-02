@@ -4,7 +4,10 @@ import 'babel-polyfill';
 import 'babel-core/register'
 let amqp = require('amqplib/callback_api');
 let redis = require('redis');
-let client = redis.createClient(); //creates a new client
+let client = redis.createClient({
+  host: process.env["REDIS_HOST"] || "localhost"
+}); //creates a new client
+const rabbitmqAddress = `amqp://rabbitmq:rabbitmq@${process.env['RABBITMQ_HOST'] || 'localhost'}`;
 
 client.on('connect', function() {
     console.log('connected to redis');
@@ -17,7 +20,7 @@ const bilinearModel = async function(n) {
 };
 
 const server = async function() {
-  amqp.connect('amqp://rabbitmq:rabbitmq@127.0.0.1', function(err, conn) {
+  amqp.connect(rabbitmqAddress, function(err, conn) {
 
     if(err){
       throw err;
