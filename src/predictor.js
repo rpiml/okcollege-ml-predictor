@@ -1,93 +1,118 @@
 
 import Sylvester from 'sylvester';
+import { redis } from 'okc-js';
+import stringify from 'csv-stringify';
+import csv from 'csv';
 
 /*
 * Least Squares
-* Input Parameters:
-*
 */
-const lstsq = (data, results) => {
+export function lstsq(data, results){
   let X = $M(data);
-  // console.log('data', data)
   let y = $V(results);
   let ones = [];
   for(let i = 0; i < X.rows(); i++) {
       ones.push([1]);
   }
   ones = $M(ones)
-  // console.log('Creating Matrix', ones)
 
   X = ones.augment(X);
-  // console.log(((X.transpose()).multiply(X)))
-  // console.log(((X.transpose()).multiply(X)).inverse())
   let pinv = (((X.transpose()).multiply(X)).inverse()).multiply(X.transpose())
 
   let weights = pinv.multiply(y)
-  // console.log('weights', weights)
   return weights;
 
 }
 
+function parseCSV(csvData){
+  return new Promise((resolve, reject) => {
+    csv.parse(csvData, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+}
+
+async function getTrainingData(redisKey){
+
+  let trainingData = await redis.get(redisKey);
+  trainingData = await parseCSV(trainingData);
+
+  // Remove the first row of headers
+  trainingData.splice(0, 1);
+  return trainingData;
+}
+
+function normilzeScores(scores){
+  let maxScore = Math.max(...scores),
+      minScore = Math.min(...scores);
+  let scoreRange = maxScore - minScore
+  return  scores.map(score => (score+Math.abs(minScore))/scoreRange)
+}
+
+// Rates College
+function rateCollege(inputVector, features, results, collegeTraining){
+  let collegeScores = [];
+  collegeTraining.forEach((college, index) => {
+    let collegeResult = results.map(result => {
+      return result == index ? 1:0;
+    })
+    let collegeWeight = lstsq(features, collegeResult);
+    let collegeScore = collegeWeight.dot(inputVector);
+    collegeScores.push(collegeScore);
+  });
+  return collegeScores
+}
+
 /*
 * Ranking
-*
 */
-export function raking(input, data, colleges){
-  let results = [];
+export async function getCollegeRankings(input){
+
+
+  let collegeTraining = await getTrainingData('learning:college_training.csv');
+  let studentTraining = await getTrainingData('learning:survey_training.csv');
+
+
+  input = await parseCSV(input);
+  input.splice(0, 1)
+
 
   // Format the input vector into
-  let inputVector = input.slice(1, -1).map(num => parseInt(num, 10))
+  let inputVector = (input[0])
+  inputVector.shift()
+  inputVector = inputVector.map(num => parseInt(num, 10))
   inputVector.unshift(1)
   inputVector = $V(inputVector)
 
 
   // Convert the data matrix into a set of features
-  let features = data.map(row => {
+  let results = [];
+  let features = studentTraining.map(row => {
     results.push(parseInt(row.pop(), 10));
     return row.slice(1).map(num=>parseInt(num, 10));
   });
 
-
-  let collegeScores = [];
-
   // Rate Each College
-  colleges.forEach((college, index) => {
-    let collegeResult = results.map(result => {
-      return result == index ? 1:0;
-    })
-    let collegeWeight = lstsq(features, collegeResult);
-    // console.log('collegeWeight', collegeWeight);
-    let collegeScore = collegeWeight.dot(inputVector);
-    // console.log('collegeScore', collegeScore);
-    collegeScores.push(collegeScore);
-  });
+  let collegeScores = rateCollege(inputVector, features, results, collegeTraining);
 
-  console.log('collegeScores', collegeScores);
+  // Normilize the College Scores
+  collegeScores = normilzeScores(collegeScores);
 
   // Sort Colleges scored by indices
   let len = collegeScores.length;
   let indices = new Array(len);
   for (let i = 0; i < len; ++i) indices[i] = i;
-  indices.sort(function (a, b) { return collegeScores[a] < collegeScores[b] ? -1 : collegeScores[a] > collegeScores[b] ? 1 : 0; });
-  console.log(indices);
+  indices.sort(function (a, b) { return collegeScores[a] > collegeScores[b] ? -1 : collegeScores[a] < collegeScores[b] ? 1 : 0; });
 
-  // Map sorted indices to college names
-  colleges = indices.map(index => colleges[index][0])
-  return colleges
+  // Map sorted indices to an arry of the index and score
+  let collegeRanking = indices.map(index => [index, collegeScores[index]])
+  collegeRanking.unshift(['college', 'score'])
 
+  return await new Promise((resolve, reject) => {
+    stringify(collegeRanking, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
 }
-
-// let data = [["user1","0","1","1"],
-// ["user2","1","1","2"],
-// ["user3","1","0","0"],
-// ["user4","0","0","3"]];
-//
-// let colleges = [[ 'fine-arts-school',1,0,1,4],
-// [ 'computer-school',0,1,4,1],
-// [ 'digital-arts-school',1,1,2,2],
-// [ 'culinary-college',0,0,3,3 ]];
-//
-// raking(data[1], data, colleges)
-
-
-export { lstsq, raking }
