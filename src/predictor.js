@@ -1,7 +1,6 @@
 // @flow
 
 import Sylvester from 'sylvester';
-import { redis } from 'okc-js';
 import stringify from 'csv-stringify';
 import { preprocessor, algorithms, parseCSV } from './util/'
 

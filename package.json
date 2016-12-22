@@ -10,6 +10,7 @@
     "test-watch": "gulp test:watch"
   },
   "dependencies": {
+    "@seveibar/okc-js": "0.0.5",
     "amqplib": "^0.5.0",
     "amqplib-rpc": "^2.0.3",
     "babel-plugin-transform-async-to-generator": "^6.16.0",

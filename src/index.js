@@ -2,7 +2,7 @@
 
 import 'babel-polyfill';
 import 'babel-core/register'
-import { rmq } from 'okc-js';
+import { rmq } from '@seveibar/okc-js';
 import { getCollegeRankings } from './predictor';
 
 const queue = 'predictor_queue';

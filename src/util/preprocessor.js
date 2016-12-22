@@ -1,6 +1,6 @@
 // @flow
 
-import { redis } from 'okc-js';
+import { redis } from '@seveibar/okc-js';
 import { parseCSV } from './csv'
 
 export async function getTrainingData(redisKey: string): Promise<number[]>{
